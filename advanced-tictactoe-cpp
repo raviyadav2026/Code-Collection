@@ -1,0 +1,254 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+class PlayerStats {
+private:
+    int wins;
+    int losses;
+    int draws;
+    string filename;
+
+public:
+    PlayerStats(string name) {
+        filename = name + "_stats.txt";
+        wins = 0;
+        losses = 0;
+        draws = 0;
+        loadStats();
+    }
+
+    void addWin() { wins++; saveStats(); }
+    void addLoss() { losses++; saveStats(); }
+    void addDraw() { draws++; saveStats(); }
+
+    void displayStats() const {
+        cout << "\n===============================" << endl;
+        cout << "         PLAYER STATS          " << endl;
+        cout << "===============================" << endl;
+        cout << " Wins   : " << wins << endl;
+        cout << " Losses : " << losses << endl;
+        cout << " Draws  : " << draws << endl;
+        cout << "===============================\n" << endl;
+    }
+
+    void saveStats() {
+        ofstream outFile(filename);
+        if (outFile.is_open()) {
+            outFile << wins << " " << losses << " " << draws;
+            outFile.close();
+        }
+    }
+
+    void loadStats() {
+        ifstream inFile(filename);
+        if (inFile.is_open()) {
+            inFile >> wins >> losses >> draws;
+            inFile.close();
+        }
+    }
+};
+class TicTacToeAI {
+private:
+    vector<char> board;
+    char humanSymbol;
+    char aiSymbol;
+    int difficulty; 
+
+    void printBoard() const {
+        cout << "\n     |     |     " << endl;
+        cout << "  " << board[0] << "  |  " << board[1] << "  |  " << board[2] << "  " << endl;
+        cout << "_____|_____|_____" << endl;
+        cout << "     |     |     " << endl;
+        cout << "  " << board[3] << "  |  " << board[4] << "  |  " << board[5] << "  " << endl;
+        cout << "_____|_____|_____" << endl;
+        cout << "     |     |     " << endl;
+        cout << "  " << board[6] << "  |  " << board[7] << "  |  " << board[8] << "  " << endl;
+        cout << "     |     |     \n" << endl;
+    }
+
+    bool checkWin(char p) const {
+        return ((board[0] == p && board[1] == p && board[2] == p) ||
+                (board[3] == p && board[4] == p && board[5] == p) ||
+                (board[6] == p && board[7] == p && board[8] == p) ||
+                (board[0] == p && board[3] == p && board[6] == p) ||
+                (board[1] == p && board[4] == p && board[7] == p) ||
+                (board[2] == p && board[5] == p && board[8] == p) ||
+                (board[0] == p && board[4] == p && board[8] == p) ||
+                (board[2] == p && board[4] == p && board[6] == p));
+    }
+
+    bool checkDraw() const {
+        for (char cell : board) {
+            if (cell != 'X' && cell != 'O') return false;
+        }
+        return true;
+    }
+
+    int minimax(bool isMax, int depth) {
+        if (checkWin(aiSymbol)) return 10 - depth;
+        if (checkWin(humanSymbol)) return depth - 10;
+        if (checkDraw()) return 0;
+
+        if (isMax) {
+            int best = -1000;
+            for (int i = 0; i < 9; i++) {
+                if (board[i] != 'X' && board[i] != 'O') {
+                    char temp = board[i];
+                    board[i] = aiSymbol;
+                    best = max(best, minimax(false, depth + 1));
+                    board[i] = temp;
+                }
+            }
+            return best;
+        } else {
+            int best = 1000;
+            for (int i = 0; i < 9; i++) {
+                if (board[i] != 'X' && board[i] != 'O') {
+                    char temp = board[i];
+                    board[i] = humanSymbol;
+                    best = min(best, minimax(true, depth + 1));
+                    board[i] = temp;
+                }
+            }
+            return best;
+        }
+    }
+
+    int getBestMove() {
+        int bestVal = -1000;
+        int bestMove = -1;
+        for (int i = 0; i < 9; i++) {
+            if (board[i] != 'X' && board[i] != 'O') {
+                char temp = board[i];
+                board[i] = aiSymbol;
+                int moveVal = minimax(false, 0);
+                board[i] = temp;
+                if (moveVal > bestVal) {
+                    bestMove = i;
+                    bestVal = moveVal;
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    int getRandomMove() {
+        vector<int> availableMoves;
+        for (int i = 0; i < 9; i++) {
+            if (board[i] != 'X' && board[i] != 'O') {
+                availableMoves.push_back(i);
+            }
+        }
+        int index = rand() % availableMoves.size();
+        return availableMoves[index];
+    }
+
+public:
+    TicTacToeAI() {
+        srand(time(0));
+        resetGame();
+    }
+
+    void resetGame() {
+        board = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    }
+
+    void setupGame() {
+        cout << "Select your symbol (X goes first, O goes second): ";
+        cin >> humanSymbol;
+        humanSymbol = toupper(humanSymbol);
+        while (humanSymbol != 'X' && humanSymbol != 'O') {
+            cout << "Invalid symbol! Please choose X or O: ";
+            cin >> humanSymbol;
+            humanSymbol = toupper(humanSymbol);
+        }
+        aiSymbol = (humanSymbol == 'X') ? 'O' : 'X';
+
+        cout << "Select Difficulty Level:\n1. Easy (Random Moves)\n2. Impossible (Smart Minimax AI)\nChoice: ";
+        cin >> difficulty;
+        while (difficulty != 1 && difficulty != 2) {
+            cout << "Invalid choice! Enter 1 or 2: ";
+            cin >> difficulty;
+        }
+    }
+
+    void play(PlayerStats& stats) {
+        setupGame();
+        char currentTurn = 'X';
+        printBoard();
+
+        while (true) {
+            if (currentTurn == humanSymbol) {
+                int move;
+                cout << "Your turn. Enter slot (1-9): ";
+                cin >> move;
+                move--;
+
+                if (move < 0 || move > 8 || board[move] == 'X' || board[move] == 'O') {
+                    cout << "Invalid move! Spot already taken or out of bounds." << endl;
+                    continue;
+                }
+                board[move] = humanSymbol;
+            } else {
+                cout << "AI is processing move..." << endl;
+                int aiMove = (difficulty == 1) ? getRandomMove() : getBestMove();
+                board[aiMove] = aiSymbol;
+            }
+
+            printBoard();
+
+            if (checkWin(humanSymbol)) {
+                cout << "🎉 You defeated the AI engine!" << endl;
+                stats.addWin();
+                break;
+            }
+            if (checkWin(aiSymbol)) {
+                cout << "🤖 The AI won. Better strategy next time!" << endl;
+                stats.addLoss();
+                break;
+            }
+            if (checkDraw()) {
+                cout << "🤝 Outstanding tactical display! It's a Draw." << endl;
+                stats.addDraw();
+                break;
+            }
+
+            currentTurn = (currentTurn == 'X') ? 'O' : 'X';
+        }
+    }
+};
+
+int main() {
+    cout << "=========================================" << endl;
+    cout << "      WELCOME TO ADVANCED C++ AI ENGINE   " << endl;
+    cout << "=========================================" << endl;
+
+    string username;
+    cout << "Enter your profile profile name (No spaces): ";
+    cin >> username;
+
+    PlayerStats player(username);
+    TicTacToeAI game;
+
+    char playAgain;
+    do {
+        player.displayStats();
+        game.resetGame();
+        game.play(player);
+
+        cout << "\nDo you want to play another match? (Y/N): ";
+        cin >> playAgain;
+    } while (toupper(playAgain) == 'Y');
+
+    cout << "\nFinal Standings: ";
+    player.displayStats();
+    cout << "Thank you for practicing C++ code syntax!" << endl;
+
+    return 0;
+}
