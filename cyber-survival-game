@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Survival // Space Shooter Engine</title>
+    <link rel="stylesheet" href="space.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <!-- Dashboard Head Up Display -->
+        <header class="hud-console">
+            <div class="hud-metric">SYSTEM INTEGRITY: <span id="healthDisplay">100</span>%</div>
+            <div class="hud-metric">CORE SCORE: <span id="scoreDisplay">0</span></div>
+        </header>
+
+        <!-- Viewport Workspace Canvas Frame -->
+        <div class="viewport-frame">
+            <canvas id="shooterCanvas" width="700" height="450"></canvas>
+            
+            <!-- Dynamic UI Control Overlays -->
+            <div id="startMenu" class="overlay-layer active">
+                <h1>CYBER SURVIVAL</h1>
+                <p>Move with <b>W, A, S, D</b> or <b>Arrow Keys</b>. Aim and fire laser beams with your <b>Mouse Left Click</b>. Vaporize incoming infected nodes.</p>
+                <button id="startBtn" class="console-btn">Boot Weapons Console</button>
+            </div>
+
+            <div id="gameOverMenu" class="overlay-layer">
+                <h1 class="critical-text">Ship Vaporized</h1>
+                <p>Nodes Destroyed: <span id="finalScore">0</span></p>
+                <button id="resetBtn" class="console-btn">Deploy New Ship</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="space.js"></script>
+</body>
+</html>
